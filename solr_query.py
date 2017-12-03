@@ -1,5 +1,5 @@
 import os, threading, json, sys, random
-from urllib.request import urlopen
+import requests
 import time, platform, logging, signal
 
 #########Logging configuration##########
@@ -23,6 +23,8 @@ solr="192.168.43.92"
 port=8983
 collection="finance"
 
+user='xyz'
+passwd='xyz123'
 #----query string related-----#
 col="Date"
 start_year=1996
@@ -64,21 +66,20 @@ class Query_maker(threading.Thread):
         while not self.shutdown_flag.is_set():
             self.incr_query_count()
             t1=time.time()
-            response = urlopen(self.url)
-            html = response.read()
+            response = requests.get(self.url,auth=(user, passwd))
             t2=time.time()
-            jresp = json.loads(html.decode('utf-8'))
+            jresp = response.json()
             logging.debug ('%s', jresp)
             self.incr_response_time(t2-t1)
-            logging.info ('%d documents found.',jresp['response']['numFound'])
+            logging.debug ('%d documents found.',jresp['response']['numFound'])
             self.url = get_query_url()
         self.update_counters()
 
     def update_counters(self):
         self.__avg_response_time = find_average(self.get_response_time(),self.get_query_count())
-        logging.info ("Number of queries run: %d", self.get_query_count())
-        logging.info ("Total response time for queries: %0.02f", self.get_response_time())
-        logging.info ('Average response time for queries: %0.02f',self.__avg_response_time)
+        logging.debug ("Number of queries run: %d", self.get_query_count())
+        logging.debug ("Total response time for queries: %0.02f", self.get_response_time())
+        logging.debug ('Average response time for queries: %0.02f',self.__avg_response_time)
         Query_maker.lock.acquire()
         try:
             #finish the work: take a lock & update the class variables
@@ -139,7 +140,7 @@ def service_shutdown(signum, frame):
 
 if len(sys.argv) == 3 :
     thread_num = int(sys.argv[1])
-	time_to_run = int(sys.argv[2])
+    time_to_run = int(sys.argv[2])
 	
 elif len(sys.argv) > 1:
 	usage()
