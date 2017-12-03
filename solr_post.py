@@ -9,8 +9,8 @@ else:
 	logging_file = os.path.join(os.getcwd(), 'solr_post.log')
     
 logging.basicConfig(
-        #level=logging.INFO,
-		level=logging.DEBUG,
+        level=logging.INFO,
+		#level=logging.DEBUG,
         format='%(asctime)s : %(levelname)s : %(threadName)-9s : %(message)s',
         filename=logging_file,
         filemode='w',
@@ -24,6 +24,8 @@ solr="192.168.43.92"
 port=8983
 collection="finance"
 
+user='xyz'
+passwd='xyz123'
 #----query string related-----#
 col="Date"
 start_year=1996
@@ -67,12 +69,12 @@ class Post_maker(threading.Thread):
 			filename=pick_rand_file(file_list)
 			logging.debug ('filename = %s',filename)
 			payload=read_file(filename)
-			response = requests.post(self.url, headers=headers, data=payload, timeout=timeout)
+			response = requests.post(self.url, auth=(user, passwd), headers=headers, data=payload, timeout=timeout)
 			t2=time.time()
 			self.incr_post_count()
-			#logging.debug ('%s', response.json())
+			logging.debug ('%s', response.json())
 			self.incr_response_time(t2-t1)
-			logging.info ('response code: %d ',response.status_code)
+			logging.debug ('response code: %d ',response.status_code)
 			#update counters every log_update_count posts
 			if self.__post_count % log_update_count == 0:
 				self.update_counters()
@@ -80,9 +82,9 @@ class Post_maker(threading.Thread):
 
 	def update_counters(self):
 		self.__avg_response_time = find_average(self.__total_response_time,self.__post_count)
-		logging.info ("Number of posts: %d", self.__post_count)
-		logging.info ("Total response time for posts: %0.02f", self.__total_response_time)
-		logging.info ('Average response time for posts: %0.02f',self.__avg_response_time)
+		logging.debug ("Number of posts: %d", self.__post_count)
+		logging.debug ("Total response time for posts: %0.02f", self.__total_response_time)
+		logging.debug ('Average response time for posts: %0.02f',self.__avg_response_time)
 		Post_maker.lock.acquire()
 		try:
             #finish the work: take a lock & update the class variables
