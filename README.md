@@ -22,8 +22,20 @@ Place the script in the same directory as the *.csv files & run it.
 
 How to run:
 $ python3 solr_post.py <num of threads> <time to run in seconds>
+
 arg1 & arg2 are optional.
-  
+
+
+# solr_search.py
+
+this script searches for a particular string to a solr with multiple cores. It uses a number of threads to perform the search on each core in parallel to decrease the searching time.
+
+How to run:
+$ python3 solr_search.py --col id --str Apache
+
+run with -h to get more info
+
+
 keywords: 
 # python3 class signal lock logging threading timer Solr query post
 
